@@ -1,0 +1,12 @@
+google-play-scraper
+pandas
+numpy
+pytest
+python-dateutil
+transformers
+torch
+spacy
+scikit-learn
+nltk
+psycopg2-binary
+sqlalchemy
