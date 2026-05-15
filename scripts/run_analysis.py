@@ -10,7 +10,7 @@ from src.sentiment_analysis import apply_sentiment
 from src.thematic_analysis import apply_theme_analysis
 
 # Load dataset
-df = pd.read_csv("data/raw/bank_reviews_clean.csv")
+df = pd.read_csv("data/raw/fintech_reviews_cleaned.csv")
 
 # Preprocess
 df = preprocess_dataset(df)
