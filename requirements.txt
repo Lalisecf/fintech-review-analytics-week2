@@ -10,3 +10,6 @@ scikit-learn
 nltk
 psycopg2-binary
 sqlalchemy
+seaborn
+matplotlib
+vaderSentiment
