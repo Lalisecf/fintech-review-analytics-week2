@@ -1,21 +1,37 @@
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from transformers import pipeline
+import pandas as pd
 
-analyzer = SentimentIntensityAnalyzer()
+# Load transformer model
+classifier = pipeline(
+    "sentiment-analysis",
+    model="distilbert-base-uncased-finetuned-sst-2-english"
+)
 
 def analyze_sentiment(text):
 
-    score = analyzer.polarity_scores(text)
+    # Handle missing values
+    if pd.isna(text):
+        return "neutral", 0.0
 
-    compound = score["compound"]
+    result = classifier(str(text[:512]))[0]
 
-    if compound >= 0.05:
-        label = "positive"
-    elif compound <= -0.05:
-        label = "negative"
+    label = result["label"].lower()
+    score = result["score"]
+
+    # Convert labels
+    if label == "positive":
+        sentiment = "positive"
+        confidence = score
+
+    elif label == "negative":
+        sentiment = "negative"
+        confidence = -score
+
     else:
-        label = "neutral"
+        sentiment = "neutral"
+        confidence = score
 
-    return label, compound
+    return sentiment, confidence
 
 
 def apply_sentiment(df):
