@@ -13,25 +13,27 @@ def analyze_sentiment(text):
     if pd.isna(text):
         return "neutral", 0.0
 
-    result = classifier(str(text[:512]))[0]
+    text = str(text).strip()
+
+    if len(text) == 0:
+        return "neutral", 0.0
+
+    result = classifier(text[:512])[0]
 
     label = result["label"].lower()
     score = result["score"]
 
-    # Convert labels
-    if label == "positive":
-        sentiment = "positive"
-        confidence = score
+    # Add neutral threshold
+    if score < 0.75:
+        sentiment = "neutral"
 
-    elif label == "negative":
-        sentiment = "negative"
-        confidence = -score
+    elif label == "positive":
+        sentiment = "positive"
 
     else:
-        sentiment = "neutral"
-        confidence = score
+        sentiment = "negative"
 
-    return sentiment, confidence
+    return sentiment, round(score, 4)
 
 
 def apply_sentiment(df):
