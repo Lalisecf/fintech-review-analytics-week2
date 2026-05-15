@@ -9,6 +9,9 @@ from src.preprocessing import preprocess_dataset
 from src.sentiment_analysis import apply_sentiment
 from src.thematic_analysis import apply_theme_analysis
 
+# Create processed folder automatically
+os.makedirs("data/processed", exist_ok=True)
+
 # Load dataset
 df = pd.read_csv("data/raw/fintech_reviews_cleaned.csv")
 
