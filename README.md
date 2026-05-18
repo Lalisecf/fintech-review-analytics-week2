@@ -33,6 +33,12 @@ Collect, clean, and preprocess Google Play Store reviews from Ethiopian banking 
 - Git & GitHub
 - GitHub Actions (CI/CD)
 - pytest
+- PostgreSQL
+- SQLAlchemy
+- psycopg2
+- transformers
+- spaCy
+- scikit-learn
 
 ---
 
@@ -60,7 +66,13 @@ fintech-review-analytics/
 │
 ├── scripts/
 │   ├── __init__.py
-│   └── run_analysis.py
+│   ├── scrape_reviews.py
+│   ├── preprocess_reviews.py
+│   ├── run_analysis.py
+│   └── insert_to_postgres.py
+│
+├── sql/
+│   └── schema.sql
 │
 ├── src/
 │   ├── __init__.py
@@ -82,7 +94,9 @@ fintech-review-analytics/
 
 ---
 
-# Data Collection Methodology
+# Task 1: Data Collection and Preprocessing
+
+## Data Collection Methodology
 
 Google Play Store reviews were collected using the `google-play-scraper` Python library.
 
@@ -123,15 +137,15 @@ The collected reviews were cleaned and standardized using pandas.
 
 # Data Quality Assessment
 
-### Missing Values
+## Missing Values
 
 No missing values were found in the dataset.
 
-### Duplicate Reviews
+## Duplicate Reviews
 
 No duplicate reviews were detected.
 
-### Final Dataset Summary
+## Final Dataset Summary
 
 - Total Reviews: 1,500
 - Total Columns: 5
@@ -200,7 +214,7 @@ The dataset contains both positive and negative customer experiences, making it 
 
 ---
 
-# Conclusion
+# Task 1 Conclusion
 
 Task 1 was completed successfully.
 
@@ -226,7 +240,7 @@ The final cleaned dataset is balanced across all three banks and ready for:
 
 ---
 
-# Limitations
+# Task 1 Limitations
 
 - Google Play Store may limit accessible reviews
 - Some reviews are short and less descriptive
@@ -265,7 +279,7 @@ A confidence score is also generated for each prediction.
 
 ---
 
-## Sentiment Analysis Pipeline
+# Sentiment Analysis Pipeline
 
 The sentiment analysis pipeline includes:
 
@@ -284,7 +298,7 @@ The pipeline was implemented using:
 
 ---
 
-## Sentiment Aggregation
+# Sentiment Aggregation
 
 Sentiment was aggregated:
 
@@ -311,8 +325,6 @@ Thematic analysis was performed to identify recurring business-related issues an
 
 ## Theme Categories
 
-The following themes were identified from customer reviews:
-
 | Theme | Description |
 |---|---|
 | Account Access Issues | Login problems, OTP issues, password failures |
@@ -324,7 +336,7 @@ The following themes were identified from customer reviews:
 
 ---
 
-## Keyword Extraction
+# Keyword Extraction
 
 TF-IDF (Term Frequency–Inverse Document Frequency) was used to extract important keywords and phrases from reviews.
 
@@ -345,7 +357,7 @@ were analyzed.
 
 ---
 
-## Theme Grouping Logic
+# Theme Grouping Logic
 
 Themes were created by grouping semantically related keywords extracted using TF-IDF and domain knowledge of fintech mobile applications.
 
@@ -465,7 +477,7 @@ The following deliverables were completed:
 
 ---
 
-# Conclusion
+# Task 2 Conclusion
 
 Task 2 was completed successfully.
 
@@ -479,6 +491,298 @@ The processed dataset and insights are ready for:
 - Advanced visualization
 - Business recommendation generation
 - Customer experience analytics
+
+---
+
+# Task 3: PostgreSQL Database Storage
+
+## Objective
+
+Design and implement a relational PostgreSQL database to persist cleaned and processed customer review data collected from Ethiopian mobile banking applications.
+
+The database simulates a real-world data engineering workflow where processed NLP data is stored for scalable analytics and querying.
+
+---
+
+# Database Technologies Used
+
+- PostgreSQL
+- SQLAlchemy
+- psycopg2
+- pandas
+
+---
+
+# Database Setup
+
+## Database Name
+
+```bash
+bank_reviews
+```
+
+---
+
+# Database Schema
+
+Two relational tables were created:
+
+## 1. Banks Table
+
+Stores metadata about each banking application.
+
+| Column | Description |
+|---|---|
+| bank_id | Primary Key |
+| bank_name | Name of the bank |
+| app_name | Mobile application name |
+
+---
+
+## 2. Reviews Table
+
+Stores cleaned reviews and NLP analysis results.
+
+| Column | Description |
+|---|---|
+| review_id | Primary Key |
+| bank_id | Foreign Key referencing banks table |
+| review_text | Customer review text |
+| rating | Star rating (1–5) |
+| review_date | Review submission date |
+| sentiment_label | Positive / Negative / Neutral |
+| sentiment_score | Sentiment confidence score |
+| identified_theme | Extracted review theme |
+| source | Review source |
+
+---
+
+# SQL Schema File
+
+The project includes a schema file:
+
+```bash
+sql/schema.sql
+```
+
+## Schema Definition
+
+```sql
+-- Banks Table
+CREATE TABLE IF NOT EXISTS banks (
+    bank_id SERIAL PRIMARY KEY,
+    bank_name VARCHAR(100) NOT NULL,
+    app_name VARCHAR(150) NOT NULL
+);
+
+-- Reviews Table
+CREATE TABLE IF NOT EXISTS reviews (
+    review_id SERIAL PRIMARY KEY,
+    bank_id INT REFERENCES banks(bank_id),
+
+    review_text TEXT NOT NULL,
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+
+    review_date DATE,
+    sentiment_label VARCHAR(20),
+    sentiment_score FLOAT,
+    identified_theme VARCHAR(100),
+
+    source VARCHAR(50)
+);
+```
+
+---
+
+# Data Insertion Pipeline
+
+A Python ETL pipeline was implemented using SQLAlchemy and pandas.
+
+The pipeline performs:
+
+- Database connection
+- CSV loading
+- Bank table population
+- Foreign key mapping
+- Review insertion into PostgreSQL
+
+## Script Location
+
+```bash
+scripts/insert_to_postgres.py
+```
+
+---
+
+# Running the Database Pipeline
+
+## Step 1: Install PostgreSQL
+
+Install PostgreSQL and pgAdmin.
+
+## Step 2: Create Database
+
+```sql
+CREATE DATABASE bank_reviews;
+```
+
+## Step 3: Run Schema File
+
+```bash
+psql -U postgres -d bank_reviews -f sql/schema.sql
+```
+
+## Step 4: Run Insert Script
+
+```bash
+python scripts/insert_to_postgres.py
+```
+
+---
+
+# Database Verification Queries
+
+Several SQL queries were executed to validate data integrity and database correctness.
+
+---
+
+## Review Count Per Bank
+
+```sql
+SELECT
+    b.bank_name,
+    COUNT(r.review_id) AS total_reviews
+FROM reviews r
+JOIN banks b
+ON r.bank_id = b.bank_id
+GROUP BY b.bank_name;
+```
+
+### Result
+
+| Bank | Total Reviews |
+|---|---|
+| Dashen Bank | 500 |
+| Bank of Abyssinia | 500 |
+| Commercial Bank of Ethiopia | 500 |
+
+This confirms that all reviews were successfully inserted into PostgreSQL.
+
+---
+
+## Average Rating Per Bank
+
+```sql
+SELECT
+    b.bank_name,
+    ROUND(AVG(r.rating), 2) AS average_rating
+FROM reviews r
+JOIN banks b
+ON r.bank_id = b.bank_id
+GROUP BY b.bank_name;
+```
+
+### Result
+
+| Bank | Average Rating |
+|---|---|
+| Dashen Bank | 3.90 |
+| Bank of Abyssinia | 3.56 |
+| Commercial Bank of Ethiopia | 4.13 |
+
+The results show that Commercial Bank of Ethiopia received the highest average customer rating among the analyzed applications.
+
+---
+
+## Null Value Validation
+
+```sql
+SELECT *
+FROM reviews
+WHERE review_text IS NULL
+   OR rating IS NULL;
+```
+
+### Result
+
+```text
+No rows returned
+```
+
+This confirms that critical review fields contain no missing values.
+
+---
+
+# Database Integrity Validation
+
+The database validation process confirmed:
+
+- Successful foreign key relationships
+- Correct review-to-bank mappings
+- No missing review text or ratings
+- Proper insertion of all 1,500 reviews
+
+---
+
+# Task 3 Deliverables
+
+The following deliverables were completed successfully:
+
+- PostgreSQL database creation
+- Relational schema design
+- SQL schema file (`schema.sql`)
+- Python ETL insertion pipeline
+- Foreign key implementation
+- Data integrity verification queries
+- Database documentation in README
+
+---
+
+# Task 3 Conclusion
+
+Task 3 was completed successfully.
+
+A fully functional PostgreSQL relational database was designed and populated with cleaned fintech review data and NLP analysis results.
+
+The database enables:
+
+- Persistent review storage
+- Efficient querying and aggregation
+- Scalable analytics workflows
+- Business intelligence reporting
+
+The stored review data is now ready for:
+
+- Advanced visualization
+- Dashboard development
+- Customer experience reporting
+- Business recommendation generation
+
+---
+
+# Git Commands
+
+## Create Task Branch
+
+```bash
+git checkout -b task-3
+```
+
+## Commit Changes
+
+```bash
+git add .
+
+git commit -m "feat(database): add PostgreSQL schema and ETL pipeline"
+```
+
+## Push to GitHub
+
+```bash
+git push origin task-3
+```
+
+---
 
 # Author
 
