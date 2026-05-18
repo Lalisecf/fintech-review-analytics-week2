@@ -13,3 +13,5 @@ sqlalchemy
 seaborn
 matplotlib
 vaderSentiment
+psycopg2-binary
+sqlalchemy
