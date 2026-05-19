@@ -7,7 +7,7 @@ import pandas as pd
 
 from src.preprocessing import preprocess_dataset
 from src.sentiment_analysis import apply_sentiment
-from src.thematic_analysis import apply_theme_analysis
+from src.thematic_analysis import apply_theme_analysis,extract_keywords
 
 # Create processed folder automatically
 os.makedirs("data/processed", exist_ok=True)
@@ -23,6 +23,9 @@ df = apply_sentiment(df)
 
 # Theme analysis
 df = apply_theme_analysis(df)
+
+# Extract TF-IDF keywords
+keywords = extract_keywords(df)
 
 # Save output
 df.to_csv(
